@@ -1,0 +1,79 @@
+version: '3'
+services:
+  openresty:
+#    image: p5ych0/openresty:latest
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+      args:
+        uuid: ${UUID:-1000}
+        guid: ${GUID:-1000}
+    ports:
+      - "33333:80"
+    volumes:
+      - ./framey-fe:/var/www/html
+      - ./docker/nginx/nossl/conf:/usr/local/openresty/nginx/conf
+      - ./docker/nginx/nossl/conf.d:/etc/nginx/conf.d
+  nodejs:
+    build:
+      args:
+        uuid: ${UUID:-1000}
+        guid: ${GUID:-1000}
+    volumes:
+      - ~/.npm:/.cache/npm
+      - ~/.cache/yarn:/.cache/yarn
+      - ./framey-fe:/var/www/html
+    environment:
+      NPM_CONFIG_CACHE: /.cache/npm
+      YARN_CACHE_FOLDER: /cache/yarn
+  php:
+#    image: p5ych0/php-fpm:v8.0-cli
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+      args:
+        uuid: ${UUID:-1000}
+        guid: ${GUID:-1000}
+    volumes:
+      - ~/.npm:/.cache/npm
+      - ~/.cache/composer:/.cache/composer
+      - ./framey-be:/var/www/html
+      - ./framey/storage/logs:/var/log/supervisor
+      - ./docker/php/local/octane.ini:/etc/supervisor.d/laravel.ini
+    environment:
+      NPM_CONFIG_CACHE: /.cache/npm
+      COMPOSER_HOME: /.cache/composer
+      PHP_OPCACHE_FREQ: 1
+      WORKERS: 2
+      NUMPROCS: 2
+#      PHP_OPCACHE_PRELOAD: /var/www/html/vendor/preload.php
+#      PHP_IDE_CONFIG: "serverName=localhost"
+#      PHP_IDE_KEY: "netbeans-xdebug" # change locally
+  redis:
+    ports:
+      - "33336:6379"
+  postgresql:
+#    image: postgres:14-alpine
+    build:
+      context: ./docker/postgres
+      dockerfile: Dockerfile
+      args:
+        uuid: ${UUID:-1000}
+        guid: ${GUID:-1000}
+    environment:
+      POSTGRES_USER: framey
+      POSTGRES_DB: framey
+      POSTGRES_PASSWORD: framey
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+#    volumes:
+#       - ./docker/pgadmin:/root/.pgadmin
+    ports:
+      - "33340:80"
+    networks:
+      - framey
+    links:
+      - postgresql

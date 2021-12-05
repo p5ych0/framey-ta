@@ -1,0 +1,64 @@
+version: '3'
+services:
+  openresty:
+    image: p5ych0/openresty:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/server/conf:/usr/local/openresty/nginx/conf
+      - ./docker/nginx/server/conf.d:/etc/nginx/conf.d
+    networks:
+      - framey
+    links:
+      - php
+      - nodejs
+  nodejs:
+    build:
+      context: ./docker/node
+      dockerfile: Dockerfile
+      args:
+        uuid: 82
+        guid: 82
+    volumes:
+      - ./framey-fe:/var/www/html
+    networks:
+      - framey
+  php:
+    image: p5ych0/php-fpm:v8.0-cli
+    volumes:
+      - ./framey-be:/var/www/html
+      - ./framey-be/storage/logs:/var/log/supervisor
+      - ./docker/php/server/octane.ini:/etc/supervisor.d/laravel.ini
+    expose:
+      - "8000"
+    networks:
+      - framey
+    command: /usr/bin/supervisord -n
+    links:
+      - redis
+      - postgresql
+    environment:
+      PHP_OPCACHE_FREQ: 0
+      WORKERS: auto
+      NUMPROCS: auto
+#      PHP_OPCACHE_PRELOAD: /var/www/html/vendor/preload.php
+#      PHP_IDE_CONFIG: "serverName=localhost"
+#      PHP_IDE_KEY: "netbeans-xdebug" # change locally
+  redis:
+    image: redis:6.2.6-alpine
+    networks:
+      - framey
+  postgresql:
+    image: postgres:14-alpine
+    volumes:
+      - ./docker/db:/var/lib/postgresql/data
+    networks:
+      - framey
+    environment:
+      POSTGRES_USER: framey
+      POSTGRES_DB: framey
+      POSTGRES_PASSWORD: framey
+networks:
+  framey:
+    driver: bridge

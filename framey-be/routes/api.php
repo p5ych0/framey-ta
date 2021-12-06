@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EmployeeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,6 +14,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group(['prefix' => 'employees', 'namespace' => 'App\Http\Controllers'], function() {
+    Route::post('/', [EmployeeController::class, 'store']);
+    Route::get('/', [EmployeeController::class, 'index'])->name('list');
+    Route::get('{id}', [EmployeeController::class, 'show'])->whereNumber('id')->name('find');
+    Route::get('{id}/children', [EmployeeController::class, 'children'])->whereNumber('id')->name('children');
+    Route::put('{id}', [EmployeeController::class, 'update'])->whereNumber('id')->name('edit');
+    Route::delete('{id}', [EmployeeController::class, 'destroy'])->whereNumber('id')->name('delete');
+    Route::get('positions', [EmployeeController::class, 'positions'])->whereNumber('id')->name('positions');
 });

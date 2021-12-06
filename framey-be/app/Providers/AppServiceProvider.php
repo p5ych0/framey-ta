@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\EmployeeService;
+use App\Validation\Rules\DifferentPosition;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        $this->app->bind(EmployeeService::class, EmployeeService::class);
+        $this->app->bind('differentPosition', DifferentPosition::class);
     }
 }

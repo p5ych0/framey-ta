@@ -15,7 +15,16 @@ class CreateEmployeesTable extends Migration
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->string('name', 40);
+            $table->string('position', 20)->index();
+            $table->unsignedBigInteger('superior')->nullable();
+            $table->date('start_date');
+            $table->date('end_date')->nullable();
+            $table->nestedSet();
+        });
+
+        Schema::table('employees', function (Blueprint $table) {
+            $table->foreign('superior')->references('id')->on('employees')->nullOnDelete();
         });
     }
 
